@@ -1,14 +1,14 @@
 package com.example.imagefilterapp
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
+import android.graphics.*
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.imagefilter.R
-import com.squareup.picasso.Picasso
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -24,9 +23,14 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var imageView: ImageView
-    lateinit var originalBitmap: Bitmap
-    lateinit var filteredBitmap: Bitmap
+    private lateinit var imageView: ImageView
+    private lateinit var originalBitmap: Bitmap
+    private lateinit var filteredBitmap: Bitmap
+
+    companion object {
+        private const val REQUEST_SELECT_IMAGE = 1
+        private const val REQUEST_WRITE_PERMISSION = 2
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,76 +42,117 @@ class MainActivity : AppCompatActivity() {
         originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.sample_image)
         imageView.setImageBitmap(originalBitmap)
 
-        findViewById<Button>(R.id.buttonSepia).setOnClickListener { applySepiaFilter() }
-        findViewById<Button>(R.id.buttonBlackWhite).setOnClickListener { applyBlackWhiteFilter() }
-        findViewById<Button>(R.id.buttonNegative).setOnClickListener { applyNegativeFilter() }
-        findViewById<Button>(R.id.buttonGreyscale).setOnClickListener { applyGreyscaleFilter() }
+        findViewById<Button>(R.id.buttonSelectImage).setOnClickListener { selectImageFromGallery() }
+        findViewById<Button>(R.id.buttonSepia).setOnClickListener { applyFilter(FilterType.SEPIA) }
+        findViewById<Button>(R.id.buttonBlackWhite).setOnClickListener { applyFilter(FilterType.BLACK_WHITE) }
+        findViewById<Button>(R.id.buttonNegative).setOnClickListener { applyFilter(FilterType.NEGATIVE) }
+        findViewById<Button>(R.id.buttonVignette).setOnClickListener { applyFilter(FilterType.VIGNETTE) }
         findViewById<Button>(R.id.buttonDownload).setOnClickListener { saveImage() }
 
         // Request storage permissions if not granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_PERMISSION)
         }
+    }
+
+    private fun selectImageFromGallery() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        startActivityForResult(intent, REQUEST_SELECT_IMAGE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SELECT_IMAGE && resultCode == Activity.RESULT_OK && data != null) {
+            val selectedImageUri: Uri? = data.data
+            if (selectedImageUri != null) {
+                val inputStream = contentResolver.openInputStream(selectedImageUri)
+                originalBitmap = BitmapFactory.decodeStream(inputStream)
+                imageView.setImageBitmap(originalBitmap)
+            }
+        }
+    }
+
+    private fun applyFilter(filterType: FilterType) {
+        filteredBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, Bitmap.Config.ARGB_8888)
+        when (filterType) {
+            FilterType.SEPIA -> applySepiaFilter()
+            FilterType.BLACK_WHITE -> applyBlackWhiteFilter()
+            FilterType.NEGATIVE -> applyNegativeFilter()
+            FilterType.VIGNETTE -> applyVignetteFilter()
+        }
+        imageView.setImageBitmap(filteredBitmap)
     }
 
     private fun applySepiaFilter() {
-        filteredBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, Bitmap.Config.ARGB_8888)
-        for (x in 0 until originalBitmap.width) {
-            for (y in 0 until originalBitmap.height) {
-                val pixel = originalBitmap.getPixel(x, y)
-                val r = Color.red(pixel)
-                val g = Color.green(pixel)
-                val b = Color.blue(pixel)
-                val tr = (0.393 * r + 0.769 * g + 0.189 * b).toInt().coerceIn(0, 255)
-                val tg = (0.349 * r + 0.686 * g + 0.168 * b).toInt().coerceIn(0, 255)
-                val tb = (0.272 * r + 0.534 * g + 0.131 * b).toInt().coerceIn(0, 255)
-                filteredBitmap.setPixel(x, y, Color.rgb(tr, tg, tb))
-            }
-        }
-        imageView.setImageBitmap(filteredBitmap)
+        val canvas = Canvas(filteredBitmap)
+        val paint = Paint()
+        paint.colorFilter = createSepiaColorFilter()
+        canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
     }
 
-
-
     private fun applyBlackWhiteFilter() {
-        filteredBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, Bitmap.Config.ARGB_8888)
-        for (x in 0 until originalBitmap.width) {
-            for (y in 0 until originalBitmap.height) {
-                val pixel = originalBitmap.getPixel(x, y)
-                val r = Color.red(pixel)
-                val g = Color.green(pixel)
-                val b = Color.blue(pixel)
-                val grey = (r + g + b) / 3
-                filteredBitmap.setPixel(x, y, Color.rgb(grey, grey, grey))
-            }
-        }
-        imageView.setImageBitmap(filteredBitmap)
+        val canvas = Canvas(filteredBitmap)
+        val paint = Paint()
+        paint.colorFilter = createBlackWhiteColorFilter()
+        canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
     }
 
     private fun applyNegativeFilter() {
-        filteredBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, Bitmap.Config.ARGB_8888)
-        for (x in 0 until originalBitmap.width) {
-            for (y in 0 until originalBitmap.height) {
-                val pixel = originalBitmap.getPixel(x, y)
-                val r = 255 - Color.red(pixel)
-                val g = 255 - Color.green(pixel)
-                val b = 255 - Color.blue(pixel)
-                filteredBitmap.setPixel(x, y, Color.rgb(r, g, b))
-            }
-        }
-        imageView.setImageBitmap(filteredBitmap)
+        val canvas = Canvas(filteredBitmap)
+        val paint = Paint()
+        paint.colorFilter = createNegativeColorFilter()
+        canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
     }
 
-    private fun applyGreyscaleFilter() {
-        filteredBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, Bitmap.Config.ARGB_8888)
-        val cm = ColorMatrix()
-        cm.setSaturation(0f)
-        val paint = android.graphics.Paint()
-        paint.colorFilter = ColorMatrixColorFilter(cm)
+    private fun applyVignetteFilter() {
+        val width = originalBitmap.width
+        val height = originalBitmap.height
+        val radius = (width / 1.5).toFloat()
+        val centerX = width / 2f
+        val centerY = height / 2f
 
-        val canvas = android.graphics.Canvas(filteredBitmap)
-        canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
-        imageView.setImageBitmap(filteredBitmap)
+        val gradient = RadialGradient(
+            centerX, centerY, radius,
+            intArrayOf(0x7f000000, 0x00000000),
+            floatArrayOf(0.0f, 1.0f),
+            Shader.TileMode.CLAMP
+        )
+
+        val paint = Paint()
+        paint.isAntiAlias = true
+        paint.shader = gradient
+
+        filteredBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(filteredBitmap)
+        canvas.drawBitmap(originalBitmap, 0f, 0f, null)
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+    }
+
+    private fun createSepiaColorFilter(): ColorMatrixColorFilter {
+        val sepiaMatrix = ColorMatrix()
+        sepiaMatrix.set(floatArrayOf(
+            0.393f, 0.769f, 0.189f, 0f, 0f,
+            0.349f, 0.686f, 0.168f, 0f, 0f,
+            0.272f, 0.534f, 0.131f, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f
+        ))
+        return ColorMatrixColorFilter(sepiaMatrix)
+    }
+
+    private fun createBlackWhiteColorFilter(): ColorMatrixColorFilter {
+        val blackWhiteMatrix = ColorMatrix()
+        blackWhiteMatrix.setSaturation(0f)
+        return ColorMatrixColorFilter(blackWhiteMatrix)
+    }
+
+    private fun createNegativeColorFilter(): ColorMatrixColorFilter {
+        val negativeMatrix = ColorMatrix(floatArrayOf(
+            -1f, 0f, 0f, 0f, 255f,
+            0f, -1f, 0f, 0f, 255f,
+            0f, 0f, -1f, 0f, 255f,
+            0f, 0f, 0f, 1f, 0f
+        ))
+        return ColorMatrixColorFilter(negativeMatrix)
     }
 
     private fun saveImage() {
@@ -145,5 +190,9 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
             null
         }
+    }
+
+    enum class FilterType {
+        SEPIA, BLACK_WHITE, NEGATIVE, VIGNETTE
     }
 }
