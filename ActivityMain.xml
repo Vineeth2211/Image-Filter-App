@@ -3,91 +3,109 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.imagefilterapp.MainActivity" >
+    tools:context="com.example.imagefilterapp.MainActivity"
+    android:padding="16dp"
+    android:background="@color/black">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Image Filter App"
+        android:fontFamily="sans-serif"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/titleTextView"
+        android:backgroundTint="@color/material_dynamic_neutral50"
+        />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:layout_margin="16dp"
+        android:layout_marginBottom="16dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/sample_image" />
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/imageView"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:weightSum="5">
+        android:src="@drawable/sample_image"
+        android:layout_below="@id/titleTextView"
+        android:layout_centerHorizontal="true"
+        />
+
+    <Button
+        android:id="@+id/buttonSelectImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Image"
+        android:layout_below="@id/imageView"
+        android:layout_marginBottom="1dp"
+        android:backgroundTint="@color/primaryColor"
+        />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="50dp"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:weightSum="5">
+        android:layout_below="@id/buttonSelectImage"
+        android:orientation="vertical"
+        android:padding="2dp"
+        android:layout_marginBottom="16dp">
 
-        <Button
-            android:id="@+id/buttonSepia"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:layout_marginRight="10dp"
-            android:text="Sepia" />
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:weightSum="2">
 
+            <Button
+                android:id="@+id/buttonSepia"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Sepia"
+                android:backgroundTint="@color/primaryColor"/>
 
-        <Button
-            android:id="@+id/buttonBlackWhite"
-            android:layout_width="0dp"
+            <Button
+                android:id="@+id/buttonBlackWhite"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="B&amp;W"
+                android:backgroundTint="@color/primaryColor"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:layout_marginLeft="10dp"
-            android:text="B&amp;W" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="50dp"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:weightSum="5">
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:weightSum="2">
 
-        <Button
-            android:id="@+id/buttonNegative"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:layout_weight="2"
-            android:text="Negative" />
+            <Button
+                android:id="@+id/buttonNegative"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Negative"
+                android:backgroundTint="@color/primaryColor"/>
 
-        <Button
-            android:id="@+id/buttonGreyscale"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="2"
-            android:text="Greyscale" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="50dp"
-        android:orientation="horizontal"
-        android:padding="16dp"
-
-        android:weightSum="5">
+            <Button
+                android:id="@+id/buttonVignette"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Vignette"
+                android:backgroundTint="@color/primaryColor"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/buttonDownload"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginRight="10dp"
-            android:layout_weight="4"
-            android:text="Download Image" />
-
-
+            android:text="Download Image"
+            android:backgroundTint="@color/primaryColor"/>
     </LinearLayout>
-</LinearLayout>
 
 </RelativeLayout>
