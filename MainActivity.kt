@@ -21,6 +21,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private lateinit var imageView: ImageView
@@ -113,7 +114,7 @@ class MainActivity : AppCompatActivity() {
 
         val gradient = RadialGradient(
             centerX, centerY, radius,
-            intArrayOf(0x7f000000, 0x00000000),
+            intArrayOf(0x00000000, 0x7f000000),
             floatArrayOf(0.0f, 1.0f),
             Shader.TileMode.CLAMP
         )
@@ -122,11 +123,23 @@ class MainActivity : AppCompatActivity() {
         paint.isAntiAlias = true
         paint.shader = gradient
 
-        filteredBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(filteredBitmap)
-        canvas.drawBitmap(originalBitmap, 0f, 0f, null)
+        val vignetteBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(vignetteBitmap)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+
+        filteredBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvasFiltered = Canvas(filteredBitmap)
+        val paintFiltered = Paint()
+        paintFiltered.isAntiAlias = true
+
+        canvasFiltered.drawBitmap(originalBitmap, 0f, 0f, null)
+        paintFiltered.xfermode = PorterDuffXfermode(PorterDuff.Mode.DARKEN)
+        canvasFiltered.drawBitmap(vignetteBitmap, 0f, 0f, paintFiltered)
+        paintFiltered.xfermode = null
+
+        imageView.setImageBitmap(filteredBitmap)
     }
+
 
     private fun createSepiaColorFilter(): ColorMatrixColorFilter {
         val sepiaMatrix = ColorMatrix()
